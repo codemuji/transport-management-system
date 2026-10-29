@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FiPlus, FiFilter, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 import vehicleService from '../../services/vehicleService';
 import DataTable from '../../components/common/DataTable';
 import Modal from '../../components/common/Modal';
@@ -12,6 +13,7 @@ const VEHICLE_TYPES = ['BUS', 'MINI_BUS', 'VAN', 'TRUCK'];
 const VEHICLE_STATUSES = ['AVAILABLE', 'BUSY', 'MAINTENANCE'];
 
 function VehicleList() {
+  const { user } = useAuth();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -42,9 +44,9 @@ function VehicleList() {
       if (filters.type) params.type = filters.type;
       if (filters.status) params.status = filters.status;
       const res = await vehicleService.getAll(params);
-      setVehicles(res.data.content);
-      setTotalPages(res.data.totalPages);
-      setTotalElements(res.data.totalElements);
+      setVehicles(res.data?.content || (Array.isArray(res.data) ? res.data : []));
+      setTotalPages(res.data?.totalPages || 0);
+      setTotalElements(res.data?.totalElements || 0);
     } catch (err) {
       toast.error('Failed to load vehicles');
     } finally {
@@ -104,9 +106,11 @@ function VehicleList() {
           >
             <FiFilter /> Filters {hasActiveFilters && <span className="filter-dot" />}
           </button>
-          <button className="btn btn-primary" onClick={handleCreate}>
-            <FiPlus /> Add Vehicle
-          </button>
+          {["ADMIN", "DISPATCHER"].includes(user?.role) && (
+            <button className="btn btn-primary" onClick={handleCreate}>
+              <FiPlus /> Add Vehicle
+            </button>
+          )}
         </div>
       </div>
 
@@ -135,8 +139,8 @@ function VehicleList() {
       <DataTable
         columns={columns}
         data={vehicles}
-        onEdit={handleEdit}
-        onDelete={(row) => setDeleteTarget(row)}
+        onEdit={['ADMIN', 'DISPATCHER'].includes(user?.role) ? handleEdit : null}
+        onDelete={user?.role === 'ADMIN' ? (row) => setDeleteTarget(row) : null}
       />
       {totalPages > 1 && (
         <div className="pagination">

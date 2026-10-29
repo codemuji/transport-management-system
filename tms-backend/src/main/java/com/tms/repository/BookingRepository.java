@@ -17,7 +17,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByStatus(BookingStatus status);
     long countByStatus(BookingStatus status);
 
-    @Query("SELECT COALESCE(SUM(b.seatCount), 0) FROM Booking b WHERE b.trip.id = :tripId AND b.status = 'CONFIRMED'")
+    @Query("SELECT COALESCE(SUM(b.seatCount), 0) FROM Booking b WHERE b.trip.id = :tripId AND b.status = com.tms.enums.BookingStatus.CONFIRMED")
     int sumSeatsByTripId(@Param("tripId") UUID tripId);
 
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.createdAt BETWEEN :start AND :end")
@@ -25,7 +25,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT b FROM Booking b WHERE " +
             "(:status IS NULL OR b.status = :status) AND " +
-            "(:customerName IS NULL OR LOWER(b.customerName) LIKE LOWER(CONCAT('%', :customerName, '%')))")
+            "(:customerName IS NULL OR LOWER(b.customerName) LIKE :customerName)")
     Page<Booking> findWithFilters(
             @Param("status") BookingStatus status,
             @Param("customerName") String customerName,

@@ -5,6 +5,7 @@ import com.tms.enums.TripStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-public interface TripRepository extends JpaRepository<Trip, UUID> {
+public interface TripRepository extends JpaRepository<Trip, UUID>, JpaSpecificationExecutor<Trip> {
     List<Trip> findByStatus(TripStatus status);
     List<Trip> findByDriverId(UUID driverId);
     List<Trip> findByVehicleId(UUID vehicleId);
@@ -27,8 +28,8 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
 
     @Query("SELECT t FROM Trip t WHERE " +
             "(:status IS NULL OR t.status = :status) AND " +
-            "(:startFrom IS NULL OR t.startTime >= :startFrom) AND " +
-            "(:startTo IS NULL OR t.startTime <= :startTo)")
+            "(cast(:startFrom as timestamp) IS NULL OR t.startTime >= :startFrom) AND " +
+            "(cast(:startTo as timestamp) IS NULL OR t.startTime <= :startTo)")
     Page<Trip> findWithFilters(
             @Param("status") TripStatus status,
             @Param("startFrom") LocalDateTime startFrom,

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FiPlus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 import routeService from '../../services/routeService';
 import DataTable from '../../components/common/DataTable';
 import Modal from '../../components/common/Modal';
@@ -8,6 +9,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import RouteForm from './RouteForm';
 
 function RouteList() {
+  const { user } = useAuth();
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,9 +33,9 @@ function RouteList() {
     setLoading(true);
     try {
       const res = await routeService.getAll({ page, size: pageSize });
-      setRoutes(res.data.content);
-      setTotalPages(res.data.totalPages);
-      setTotalElements(res.data.totalElements);
+      setRoutes(res.data?.content || (Array.isArray(res.data) ? res.data : []));
+      setTotalPages(res.data?.totalPages || 0);
+      setTotalElements(res.data?.totalElements || 0);
     } catch (err) {
       toast.error('Failed to load routes');
     } finally {
@@ -79,9 +81,9 @@ function RouteList() {
     <div>
       <div className="page-header">
         <h2 className="page-title">Routes</h2>
-        <button className="btn btn-primary" onClick={handleCreate}><FiPlus /> Add Route</button>
+        {['ADMIN', 'DISPATCHER'].includes(user?.role) && <button className='btn btn-primary' onClick={handleCreate}><FiPlus /> Add Route</button>}
       </div>
-      <DataTable columns={columns} data={routes} onEdit={handleEdit} onDelete={(row) => setDeleteTarget(row)} />
+      <DataTable columns={columns} data={routes} onEdit={['ADMIN', 'DISPATCHER'].includes(user?.role) ? handleEdit : null} onDelete={user?.role === 'ADMIN' ? (row) => setDeleteTarget(row) : null} />
       {totalPages > 1 && (
         <div className="pagination">
           <button disabled={page === 0} onClick={() => setPage(p => p - 1)}>

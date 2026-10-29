@@ -21,8 +21,8 @@ public interface LorryReceiptRepository extends JpaRepository<LorryReceipt, UUID
 
     @Query("SELECT lr FROM LorryReceipt lr WHERE " +
             "(:status IS NULL OR lr.status = :status) AND " +
-            "(:origin IS NULL OR LOWER(lr.origin) LIKE LOWER(CONCAT('%', :origin, '%'))) AND " +
-            "(:destination IS NULL OR LOWER(lr.destination) LIKE LOWER(CONCAT('%', :destination, '%')))")
+            "(:origin IS NULL OR LOWER(lr.origin) LIKE :origin) AND " +
+            "(:destination IS NULL OR LOWER(lr.destination) LIKE :destination)")
     Page<LorryReceipt> findWithFilters(
             @Param("status") LrStatus status,
             @Param("origin") String origin,

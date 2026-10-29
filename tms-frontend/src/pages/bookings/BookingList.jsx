@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FiPlus, FiXCircle, FiFilter, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 import bookingService from '../../services/bookingService';
 import DataTable from '../../components/common/DataTable';
 import Modal from '../../components/common/Modal';
@@ -11,6 +12,7 @@ import BookingForm from './BookingForm';
 const BOOKING_STATUSES = ['CONFIRMED', 'CANCELLED', 'COMPLETED'];
 
 function BookingList() {
+  const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -38,11 +40,11 @@ function BookingList() {
     try {
       const params = { page, size: pageSize };
       if (filters.status) params.status = filters.status;
-      if (filters.customerName.trim()) params.customerName = filters.customerName.trim();
+      if (filters.customerName?.trim()) params.customerName = filters.customerName.trim();
       const res = await bookingService.getAll(params);
-      setBookings(res.data.content);
-      setTotalPages(res.data.totalPages);
-      setTotalElements(res.data.totalElements);
+      setBookings(res.data?.content || (Array.isArray(res.data) ? res.data : []));
+      setTotalPages(res.data?.totalPages || 0);
+      setTotalElements(res.data?.totalElements || 0);
     } catch (err) {
       toast.error('Failed to load bookings');
     } finally {
@@ -148,8 +150,8 @@ function BookingList() {
       <DataTable
         columns={columns}
         data={bookings}
-        onEdit={handleEdit}
-        onDelete={(row) => setDeleteTarget(row)}
+        onEdit={['ADMIN', 'DISPATCHER'].includes(user?.role) ? handleEdit : null}
+        onDelete={user?.role === 'ADMIN' ? (row) => setDeleteTarget(row) : null}
         actions={bookingActions}
       />
       {totalPages > 1 && (

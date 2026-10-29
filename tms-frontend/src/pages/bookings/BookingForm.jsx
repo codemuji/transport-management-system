@@ -45,7 +45,7 @@ function BookingForm({ booking, onSubmit, onCancel }) {
     if (validate()) {
       onSubmit({
         ...form,
-        tripId: parseInt(form.tripId),
+        tripId: form.tripId,
         seatCount: parseInt(form.seatCount),
       });
     }
@@ -73,7 +73,7 @@ function BookingForm({ booking, onSubmit, onCancel }) {
             <option value="">Select trip</option>
             {trips.map(t => (
               <option key={t.id} value={t.id}>
-                {t.routeOrigin} → {t.routeDestination} ({t.bookedSeats}/{t.totalSeats} seats)
+                {t.routeOrigin && t.routeDestination ? `${t.routeOrigin} → ${t.routeDestination}` : `Trip ${t.id.slice(0, 8)}`} {t.totalSeats ? `(${t.bookedSeats || 0}/${t.totalSeats} seats)` : ""}
               </option>
             ))}
           </select>

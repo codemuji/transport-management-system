@@ -38,7 +38,9 @@ public class LorryReceiptService {
                 : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return lrRepository.findWithFilters(status, origin, destination, pageable)
+        String originPattern = (origin != null && !origin.isBlank()) ? "%" + origin.trim().toLowerCase() + "%" : null;
+        String destPattern = (destination != null && !destination.isBlank()) ? "%" + destination.trim().toLowerCase() + "%" : null;
+        return lrRepository.findWithFilters(status, originPattern, destPattern, pageable)
                 .map(this::toResponse);
     }
 

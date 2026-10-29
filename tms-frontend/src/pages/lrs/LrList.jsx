@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FiPlus, FiFilter, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 import lrService from '../../services/lrService';
 import Modal from '../../components/common/Modal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
@@ -12,6 +13,7 @@ import '../../styles/components.css';
 const LR_STATUSES = ['', 'CREATED', 'IN_TRANSIT', 'DELIVERED'];
 
 function LrList() {
+  const { user } = useAuth();
   const [lrs, setLrs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -37,9 +39,9 @@ function LrList() {
       if (filters.destination.trim()) params.destination = filters.destination.trim();
 
       const res = await lrService.getAll(params);
-      setLrs(res.data.content);
-      setTotalPages(res.data.totalPages);
-      setTotalElements(res.data.totalElements);
+      setLrs(res.data?.content || (Array.isArray(res.data) ? res.data : []));
+      setTotalPages(res.data?.totalPages || 0);
+      setTotalElements(res.data?.totalElements || 0);
     } catch (err) {
       toast.error('Failed to load lorry receipts');
     } finally {
@@ -116,9 +118,11 @@ function LrList() {
           >
             <FiFilter /> Filters {hasActiveFilters && <span className="filter-dot" />}
           </button>
-          <button className="btn btn-primary" onClick={handleCreate}>
-            <FiPlus /> Add LR
-          </button>
+          {["ADMIN", "DISPATCHER"].includes(user?.role) && (
+            <button className="btn btn-primary" onClick={handleCreate}>
+              <FiPlus /> Add LR
+            </button>
+          )}
         </div>
       </div>
 
@@ -195,12 +199,16 @@ function LrList() {
                       <button className="btn-icon btn-edit" onClick={() => handleDownloadPdf(lr)} title="Download PDF">
                         <FiDownload />
                       </button>
-                      <button className="btn-icon btn-edit" onClick={() => handleEdit(lr)} title="Edit">
-                        <FiEdit2 />
-                      </button>
-                      <button className="btn-icon btn-delete" onClick={() => setDeleteTarget(lr)} title="Delete">
-                        <FiTrash2 />
-                      </button>
+                      {["ADMIN", "DISPATCHER"].includes(user?.role) && (
+                        <button className="btn-icon btn-edit" onClick={() => handleEdit(lr)} title="Edit">
+                          <FiEdit2 />
+                        </button>
+                      )}
+                      {user?.role === "ADMIN" && (
+                        <button className="btn-icon btn-delete" onClick={() => setDeleteTarget(lr)} title="Delete">
+                          <FiTrash2 />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

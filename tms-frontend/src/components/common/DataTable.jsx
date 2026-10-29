@@ -4,11 +4,12 @@ import '../../styles/components.css';
 
 const PAGE_SIZE = 10;
 
-function DataTable({ columns, data, onEdit, onDelete, actions }) {
+function DataTable({ columns, data = [], onEdit, onDelete, actions, serverSide = true }) {
+  const safeData = Array.isArray(data) ? data : [];
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(data.length / PAGE_SIZE);
+  const totalPages = Math.ceil(safeData.length / PAGE_SIZE);
   const startIdx = (currentPage - 1) * PAGE_SIZE;
-  const pageData = data.slice(startIdx, startIdx + PAGE_SIZE);
+  const pageData = serverSide ? safeData : safeData.slice(startIdx, startIdx + PAGE_SIZE);
 
   return (
     <div className="table-container">
@@ -52,7 +53,7 @@ function DataTable({ columns, data, onEdit, onDelete, actions }) {
           )}
         </tbody>
       </table>
-      {totalPages > 1 && (
+      {!serverSide && totalPages > 1 && (
         <div className="pagination">
           <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
             <FiChevronLeft />

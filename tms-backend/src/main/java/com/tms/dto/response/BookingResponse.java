@@ -15,6 +15,7 @@ public class BookingResponse {
     private String customerPhone;
     private String customerEmail;
     private UUID tripId;
+    private String tripRoute;
     private String vehicleNumber;
     private Integer seatCount;
     private BookingStatus status;

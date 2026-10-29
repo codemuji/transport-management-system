@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiPlay, FiCheckCircle, FiFilter, FiChevronLeft, FiChevronRight, FiMapPin } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 import tripService from '../../services/tripService';
 import DataTable from '../../components/common/DataTable';
 import Modal from '../../components/common/Modal';
@@ -12,6 +13,7 @@ import TripForm from './TripForm';
 const TRIP_STATUSES = ['PLANNED', 'IN_PROGRESS', 'COMPLETED'];
 
 function TripList() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,9 +48,9 @@ function TripList() {
       if (filters.startFrom) params.startFrom = filters.startFrom;
       if (filters.startTo) params.startTo = filters.startTo;
       const res = await tripService.getAll(params);
-      setTrips(res.data.content);
-      setTotalPages(res.data.totalPages);
-      setTotalElements(res.data.totalElements);
+      setTrips(res.data?.content || (Array.isArray(res.data) ? res.data : []));
+      setTotalPages(res.data?.totalPages || 0);
+      setTotalElements(res.data?.totalElements || 0);
     } catch (err) {
       toast.error('Failed to load trips');
     } finally {
@@ -138,7 +140,7 @@ function TripList() {
           >
             <FiFilter /> Filters {hasActiveFilters && <span className="filter-dot" />}
           </button>
-          <button className="btn btn-primary" onClick={handleCreate}><FiPlus /> Add Trip</button>
+          {['ADMIN', 'DISPATCHER'].includes(user?.role) && <button className='btn btn-primary' onClick={handleCreate}><FiPlus /> Add Trip</button>}
         </div>
       </div>
 
@@ -168,8 +170,8 @@ function TripList() {
       <DataTable
         columns={columns}
         data={trips}
-        onEdit={handleEdit}
-        onDelete={(row) => setDeleteTarget(row)}
+        onEdit={['ADMIN', 'DISPATCHER'].includes(user?.role) ? handleEdit : null}
+        onDelete={user?.role === 'ADMIN' ? (row) => setDeleteTarget(row) : null}
         actions={tripActions}
       />
       {totalPages > 1 && (

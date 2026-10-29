@@ -24,6 +24,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -48,14 +51,29 @@ public class TripService {
     private final WebhookDispatchService webhookDispatchService;
     private final NotificationService notificationService;
     private final com.tms.repository.UserRepository userRepository;
+    private final com.tms.repository.BookingRepository bookingRepository;
 
     @Transactional(readOnly = true)
     public Page<TripResponse> getAllTrips(int page, int size, TripStatus status,
                                           LocalDateTime startFrom, LocalDateTime startTo) {
         log.debug("Fetching trips page={} size={} status={} startFrom={} startTo={}", page, size, status, startFrom, startTo);
-        return tripRepository.findWithFilters(status, startFrom, startTo,
-                PageRequest.of(page, size, Sort.by("createdAt").descending()))
-                .map(this::toResponse);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Specification<Trip> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (startFrom != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("startTime"), startFrom));
+            }
+            if (startTo != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("startTime"), startTo));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return tripRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -254,6 +272,8 @@ public class TripService {
     }
 
     TripResponse toResponse(Trip t) {
+        Integer totalSeats = t.getVehicle() != null ? t.getVehicle().getCapacity() : null;
+        Integer bookedSeats = bookingRepository != null ? bookingRepository.sumSeatsByTripId(t.getId()) : 0;
         List<TripResponse.LrSummary> lrSummaries = t.getLorryReceipts() != null
                 ? t.getLorryReceipts().stream().map(lr -> TripResponse.LrSummary.builder()
                         .id(lr.getId())
@@ -274,6 +294,8 @@ public class TripService {
                 .routeOrigin(t.getRoute() != null ? t.getRoute().getOrigin() : null)
                 .routeDestination(t.getRoute() != null ? t.getRoute().getDestination() : null)
                 .routeDistance(t.getRoute() != null ? t.getRoute().getDistance() : null)
+                .totalSeats(totalSeats)
+                .bookedSeats(bookedSeats)
                 .status(t.getStatus())
                 .startTime(t.getStartTime())
                 .endTime(t.getEndTime())

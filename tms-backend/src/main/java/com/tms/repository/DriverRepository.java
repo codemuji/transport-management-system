@@ -20,7 +20,7 @@ public interface DriverRepository extends JpaRepository<Driver, UUID> {
 
     @Query("SELECT d FROM Driver d WHERE " +
             "(:status IS NULL OR d.status = :status) AND " +
-            "(:name IS NULL OR LOWER(d.name) LIKE LOWER(CONCAT('%', :name, '%')))")
+            "(:name IS NULL OR LOWER(d.name) LIKE :name)")
     Page<Driver> findWithFilters(
             @Param("status") DriverStatus status,
             @Param("name") String name,

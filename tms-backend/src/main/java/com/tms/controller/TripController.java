@@ -48,7 +48,7 @@ public class TripController {
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DISPATCHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DISPATCHER', 'CLIENT')")
     @Operation(summary = "Get trips by status")
     public ResponseEntity<ApiResponse<List<TripResponse>>> getTripsByStatus(@PathVariable TripStatus status) {
         return ResponseEntity.ok(ApiResponse.ok(tripService.getTripsByStatus(status)));

@@ -36,7 +36,8 @@ public class BookingService {
     @Transactional(readOnly = true)
     public Page<BookingResponse> getAllBookings(int page, int size, BookingStatus status, String customerName) {
         log.debug("Fetching bookings page={} size={} status={} customerName={}", page, size, status, customerName);
-        return bookingRepository.findWithFilters(status, customerName,
+        String namePattern = (customerName != null && !customerName.isBlank()) ? "%" + customerName.trim().toLowerCase() + "%" : null;
+        return bookingRepository.findWithFilters(status, namePattern,
                 PageRequest.of(page, size, Sort.by("createdAt").descending()))
                 .map(this::toResponse);
     }
@@ -140,12 +141,17 @@ public class BookingService {
     }
 
     private BookingResponse toResponse(Booking b) {
+        String tripRoute = null;
+        if (b.getTrip() != null && b.getTrip().getRoute() != null) {
+            tripRoute = b.getTrip().getRoute().getOrigin() + " → " + b.getTrip().getRoute().getDestination();
+        }
         return BookingResponse.builder()
                 .id(b.getId())
                 .customerName(b.getCustomerName())
                 .customerPhone(b.getCustomerPhone())
                 .customerEmail(b.getCustomerEmail())
                 .tripId(b.getTrip().getId())
+                .tripRoute(tripRoute)
                 .vehicleNumber(b.getTrip().getVehicle().getVehicleNumber())
                 .seatCount(b.getSeatCount())
                 .status(b.getStatus())

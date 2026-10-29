@@ -19,7 +19,7 @@ function DriverForm({ driver, onSubmit, onCancel }) {
     if (!form.name.trim()) errs.name = 'Required';
     if (!form.licenseNumber.trim()) errs.licenseNumber = 'Required';
     if (!form.phone.trim()) errs.phone = 'Required';
-    else if (!/^\+?[0-9]{7,15}$/.test(form.phone)) errs.phone = 'Invalid phone format';
+    else if (!/^[\+]?[0-9\-\s\(\)]{7,25}$/.test(form.phone)) errs.phone = 'Invalid phone format';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };

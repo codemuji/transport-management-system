@@ -34,7 +34,8 @@ public class DriverService {
     @Transactional(readOnly = true)
     public Page<DriverResponse> getAllDrivers(int page, int size, DriverStatus status, String name) {
         log.debug("Fetching drivers page={} size={} status={} name={}", page, size, status, name);
-        return driverRepository.findWithFilters(status, name,
+        String namePattern = (name != null && !name.isBlank()) ? "%" + name.trim().toLowerCase() + "%" : null;
+        return driverRepository.findWithFilters(status, namePattern,
                 PageRequest.of(page, size, Sort.by("createdAt").descending()))
                 .map(this::toResponse);
     }

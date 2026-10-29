@@ -20,6 +20,8 @@ public class TripResponse {
     private String routeOrigin;
     private String routeDestination;
     private Double routeDistance;
+    private Integer totalSeats;
+    private Integer bookedSeats;
     private TripStatus status;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

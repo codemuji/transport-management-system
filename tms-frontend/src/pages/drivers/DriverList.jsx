@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FiPlus, FiFilter, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 import driverService from '../../services/driverService';
 import DataTable from '../../components/common/DataTable';
 import Modal from '../../components/common/Modal';
@@ -11,6 +12,7 @@ import DriverForm from './DriverForm';
 const DRIVER_STATUSES = ['ACTIVE', 'INACTIVE'];
 
 function DriverList() {
+  const { user } = useAuth();
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -37,11 +39,11 @@ function DriverList() {
     try {
       const params = { page, size: pageSize };
       if (filters.status) params.status = filters.status;
-      if (filters.name.trim()) params.name = filters.name.trim();
+      if (filters.name?.trim()) params.name = filters.name.trim();
       const res = await driverService.getAll(params);
-      setDrivers(res.data.content);
-      setTotalPages(res.data.totalPages);
-      setTotalElements(res.data.totalElements);
+      setDrivers(res.data?.content || (Array.isArray(res.data) ? res.data : []));
+      setTotalPages(res.data?.totalPages || 0);
+      setTotalElements(res.data?.totalElements || 0);
     } catch (err) {
       toast.error('Failed to load drivers');
     } finally {
@@ -124,7 +126,7 @@ function DriverList() {
         </div>
       )}
 
-      <DataTable columns={columns} data={drivers} onEdit={handleEdit} onDelete={(row) => setDeleteTarget(row)} />
+      <DataTable columns={columns} data={drivers} onEdit={handleEdit} onDelete={user?.role === 'ADMIN' ? (row) => setDeleteTarget(row) : null} />
       {totalPages > 1 && (
         <div className="pagination">
           <button disabled={page === 0} onClick={() => setPage(p => p - 1)}>

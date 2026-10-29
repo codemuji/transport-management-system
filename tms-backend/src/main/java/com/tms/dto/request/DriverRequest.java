@@ -11,7 +11,7 @@ public class DriverRequest {
     private String name;
 
     @NotBlank(message = "Phone is required")
-    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid phone number format")
+    @Pattern(regexp = "^[\\+]?[0-9\\-\\s\\(\\)]{7,25}$", message = "Invalid phone number format")
     private String phone;
 
     @NotBlank(message = "License number is required")
